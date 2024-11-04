@@ -76,9 +76,7 @@ def search_by_title(library, title):
     return "\n".join(anime.title for anime in anime_list)
 
 
-def search_by_criteria(
-    library, type_search, year_search, season_search, status_search, tags_search, limit
-):
+def search_by_criteria(library, type_search, year_search, season_search, status_search, tags_search, limit):
     search_result = library.take_anime_list(
         type_search, season_search, year_search, status_search, tags_search
     )
@@ -94,5 +92,5 @@ def get_random_anime(loader):
     if not anime_list:
         return "No anime available."
 
-    random_anime = anime_list[random.randint(0, len(anime_list) - 1)]
+    random_anime = random.choice(anime_list)
     return str(random_anime)

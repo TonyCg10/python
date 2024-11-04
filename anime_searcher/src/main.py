@@ -1,5 +1,3 @@
-# gui.py
-
 import sys
 from PyQt5.QtWidgets import (
     QApplication,
@@ -10,7 +8,9 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QPushButton,
     QTextEdit,
+    QMessageBox,
 )
+from PyQt5.QtCore import Qt
 from main_code import (
     loader,
     library,
@@ -29,8 +29,12 @@ class AnimeApp(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.loader = loader
-        self.library = library
+        try:
+            self.loader = loader
+            self.library = library
+        except Exception as e:
+            self.show_error_message(f"Error loading library or loader: {e}")
+            return
 
         self.initUI()
 
@@ -44,9 +48,24 @@ class AnimeApp(QMainWindow):
         layout = QVBoxLayout()
 
         # Labels
-        self.command_label = QLabel("Use the fields below to search for anime:")
+        self.command_label = QLabel(
+            "Use the fields below to search for anime:")
         layout.addWidget(self.command_label)
 
+        # Input Fields
+        self.add_input_fields(layout)
+
+        # Result Area
+        self.result_area = QTextEdit()
+        self.result_area.setReadOnly(True)
+        layout.addWidget(self.result_area)
+
+        # Buttons
+        self.add_buttons(layout)
+
+        self.central_widget.setLayout(layout)
+
+    def add_input_fields(self, layout):
         # Title Search
         self.title_input = QLineEdit()
         self.title_input.setPlaceholderText("Title")
@@ -66,7 +85,8 @@ class AnimeApp(QMainWindow):
         layout.addWidget(self.season_input)
 
         self.status_input = QLineEdit()
-        self.status_input.setPlaceholderText("Status (e.g., Ongoing, Finished)")
+        self.status_input.setPlaceholderText(
+            "Status (e.g., Ongoing, Finished)")
         layout.addWidget(self.status_input)
 
         self.tags_input = QLineEdit()
@@ -77,11 +97,7 @@ class AnimeApp(QMainWindow):
         self.limit_input.setPlaceholderText("Limit")
         layout.addWidget(self.limit_input)
 
-        # Result Area
-        self.result_area = QTextEdit()
-        self.result_area.setReadOnly(True)
-        layout.addWidget(self.result_area)
-
+    def add_buttons(self, layout):
         # Search Button
         self.search_button = QPushButton("Search")
         self.search_button.clicked.connect(self.process_search)
@@ -92,46 +108,72 @@ class AnimeApp(QMainWindow):
         self.random_button.clicked.connect(self.show_random_anime)
         layout.addWidget(self.random_button)
 
-        self.central_widget.setLayout(layout)
-
     def process_search(self):
-        title = self.title_input.text().strip()
-        type_ = self.type_input.text().strip()
-        year = self.year_input.text().strip()
-        season = self.season_input.text().strip()
-        status = self.status_input.text().strip()
-        tags = self.tags_input.text().strip()
-        limit = self.limit_input.text().strip()
+        try:
+            title = self.title_input.text().strip()
+            type_ = self.type_input.text().strip()
+            year = self.year_input.text().strip()
+            season = self.season_input.text().strip()
+            status = self.status_input.text().strip()
+            tags = self.tags_input.text().strip()
+            limit = self.limit_input.text().strip()
 
-        if title:
-            result = search_by_title(self.library, title)
-        else:
-            type_search = get_type(type_) if type_ else None
-            year_search = get_year(year) if year else 0
-            season_search = get_season(season) if season else None
-            status_search = get_status(status) if status else None
-            tags_search = get_tags(tags) if tags else []
-            limit_search = int(limit) if limit else 0
+            # Validate year and limit inputs
+            if year and not year.isdigit():
+                self.show_error_message("Year must be a valid number.")
+                return
 
-            result = search_by_criteria(
-                self.library,
-                type_search,
-                year_search,
-                season_search,
-                status_search,
-                tags_search,
-                limit_search,
-            )
+            if limit and not limit.isdigit():
+                self.show_error_message("Limit must be a valid number.")
+                return
 
-        self.result_area.setText(result)
+            # If title is provided, prioritize title search
+            if title:
+                result = search_by_title(self.library, title)
+            else:
+                # Otherwise, search by criteria
+                type_search = get_type(type_) if type_ else None
+                year_search = get_year(year) if year else 0
+                season_search = get_season(season) if season else None
+                status_search = get_status(status) if status else None
+                tags_search = get_tags(tags) if tags else []
+                limit_search = int(limit) if limit else 0
+
+                result = search_by_criteria(
+                    self.library,
+                    type_search,
+                    year_search,
+                    season_search,
+                    status_search,
+                    tags_search,
+                    limit_search,
+                )
+
+            if not result:
+                self.result_area.setText("No results found.")
+            else:
+                self.result_area.setText(result)
+
+        except Exception as e:
+            self.show_error_message(f"An error occurred during search: {e}")
 
     def show_random_anime(self):
-        result = get_random_anime(self.loader)
-        self.result_area.setText(result)
+        try:
+            result = get_random_anime(self.loader)
+            self.result_area.setText(result)
+        except Exception as e:
+            self.show_error_message(f"An error occurred: {e}")
+
+    def show_error_message(self, message):
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Critical)
+        msg_box.setText(message)
+        msg_box.setWindowTitle("Error")
+        msg_box.exec_()
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     ex = AnimeApp()
     ex.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
