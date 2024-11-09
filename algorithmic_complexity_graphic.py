@@ -4,7 +4,7 @@ import time
 import itertools
 
 # Tamaños de entrada
-n_values = np.arange(220, 2020, 220)
+n_values = np.arange(10, 100, 10)
 
 
 # Funciones de ejemplo
@@ -57,8 +57,6 @@ def linear_time_example(arr):
     for i in arr:  # Itera sobre cada elemento en el arreglo
         print(f"Sumando elemento: {i}")
         total += i  # Suma el elemento actual al total
-    print(f"Suma total: {total}")
-    return total  # Retorna la suma total
     print(f"Suma total: {total}")
     return total  # Retorna la suma total
 

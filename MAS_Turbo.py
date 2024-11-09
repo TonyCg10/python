@@ -74,61 +74,50 @@ def turbo(rows, columns):
     moved = False
     attempts = 0
 
-    # Bucle hasta que la fila actual sea mayor que 0
     while current_row > 0:
-        if matrix[current_row][random_column] == "?":
-            attempts += 1
-            print("Attempts: ", attempts)
-            break
-
-        # Encontrar el índice del símbolo "*" en la fila actual
         pivot = matrix[current_row].index("*")
-
-        # Crear listas de índices a la derecha e izquierda del pivote
         right_from_pivot = [i for i in range(pivot + 1, len(matrix[current_row]))]
         left_from_pivot = [i for i in range(pivot - 1, -1, -1)]
 
         # Moverse hacia la izquierda si hay más espacio a la derecha
-        if len(right_from_pivot) > len(left_from_pivot):
-            while (
-                random_column > 0
-                and matrix[current_row][random_column] == "*"
-                and not moved
-            ):
+        if len(right_from_pivot) > len(left_from_pivot) and not moved:
+            # Moverse a la esquina
+            while random_column > 0 and matrix[current_row][random_column] == "*":
                 move_left()
-            moved = True
-            move_forward()
-            if current_row > 0 and matrix[current_row - 1][random_column] == "?":
-                break
-            while (
-                current_row < rows - 1 and matrix[current_row + 1][random_column] == "."
-            ):
-                move_back()
-            move_right()
-            move_forward()
-            if current_row > 0 and matrix[current_row - 1][random_column] == "?":
-                break
+                moved = True
+
+            # Buscar el primer "?" y rodearlo
+            while matrix[current_row - 1][random_column] != "?":
+                move_right()
+
+                if matrix[current_row - 1][random_column] == "?":
+                    attempts += 1
+                    print("Attemps: ", attempts)
+                    print()
 
         # Moverse hacia la derecha si hay más espacio a la izquierda
-        elif len(left_from_pivot) > len(right_from_pivot):
+        elif len(left_from_pivot) > len(right_from_pivot) and not moved:
+            # Moverse a la esquina
             while (
                 random_column < columns - 1
                 and matrix[current_row][random_column] == "*"
-                and not moved
             ):
                 move_right()
-            moved = True
-            move_forward()
-            if current_row > 0 and matrix[current_row - 1][random_column] == "?":
-                break
-            while (
-                current_row < rows - 1 and matrix[current_row + 1][random_column] == "."
-            ):
-                move_back()
-            move_left()
-            move_forward()
-            if current_row > 0 and matrix[current_row - 1][random_column] == "?":
-                break
+                moved = True
+
+            # Buscar el primer "?" y rodearlo
+            while matrix[current_row - 1][random_column] != "?":
+                move_left()
+
+                if matrix[current_row - 1][random_column] == "?":
+                    attempts += 1
+                    print("Attemps: ", attempts)
+                    print()
+
+                    if random_column > 0:
+                        move_left()
+
+                    break
 
         # Moverse aleatoriamente si hay igual espacio a ambos lados
         elif len(left_from_pivot) == len(right_from_pivot):
@@ -141,17 +130,17 @@ def turbo(rows, columns):
                     move_left()
                 moved = True
                 move_forward()
-                if current_row > 0 and matrix[current_row - 1][random_column] == "?":
-                    break
-                while (
-                    current_row < rows - 1
-                    and matrix[current_row + 1][random_column] == "."
-                ):
-                    move_back()
-                move_right()
-                move_forward()
-                if current_row > 0 and matrix[current_row - 1][random_column] == "?":
-                    break
+                # if current_row > 0 and matrix[current_row - 1][random_column] == "?":
+                #     break
+                # while (
+                #     current_row < rows - 1
+                #     and matrix[current_row + 1][random_column] == "."
+                # ):
+                #     move_back()
+                # move_right()
+                # move_forward()
+                # if current_row > 0 and matrix[current_row - 1][random_column] == "?":
+                #     break
             else:
                 while (
                     random_column < columns - 1
@@ -161,17 +150,17 @@ def turbo(rows, columns):
                     move_right()
                 moved = True
                 move_forward()
-                if current_row > 0 and matrix[current_row - 1][random_column] == "?":
-                    break
-                while (
-                    current_row < rows - 1
-                    and matrix[current_row + 1][random_column] == "."
-                ):
-                    move_back()
-                move_left()
-                move_forward()
-                if current_row > 0 and matrix[current_row - 1][random_column] == "?":
-                    break
+                # if current_row > 0 and matrix[current_row - 1][random_column] == "?":
+                #     break
+                # while (
+                #     current_row < rows - 1
+                #     and matrix[current_row + 1][random_column] == "."
+                # ):
+                #     move_back()
+                # move_left()
+                # move_forward()
+                # if current_row > 0 and matrix[current_row - 1][random_column] == "?":
+                #     break
 
     return matrix
 
@@ -189,7 +178,7 @@ def print_matrix(matrix):
 
 
 # Definir el tamaño de la matriz
-MATRIX_SIZE = 10
+MATRIX_SIZE = 15
 
 ROWS = MATRIX_SIZE
 COLUMNS = ROWS - 1
