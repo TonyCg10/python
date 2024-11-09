@@ -3,12 +3,14 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QWidget,
     QVBoxLayout,
-    QHBoxLayout,
-    QListWidget,
-    QListWidgetItem,
-    QPushButton,
+    QLineEdit,
+    QFrame,
 )
+from PyQt6.QtCore import Qt, QPropertyAnimation, QRect
 import sys
+import os
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 
 class SimpleUI(QMainWindow):
@@ -19,6 +21,7 @@ class SimpleUI(QMainWindow):
     def initUI(self):
         self.setWindowTitle("Simple UI")
         self.setGeometry(100, 100, 600, 400)
+        self.resize(1280, 720)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -26,39 +29,83 @@ class SimpleUI(QMainWindow):
         main_layout = QVBoxLayout()
         central_widget.setLayout(main_layout)
 
-        # Barra superior
-        top_bar_layout = QHBoxLayout()
-        main_layout.addLayout(top_bar_layout)
+        # Barra de búsqueda
+        search_bar_layout = QVBoxLayout()
+        main_layout.addLayout(search_bar_layout)
 
-        home_button = QPushButton("Home")
-        top_bar_layout.addWidget(home_button)
+        self.search_bar = QLineEdit()
+        self.search_bar.setPlaceholderText("Search...")
+        self.search_bar.setFixedHeight(40)
+        self.search_bar.setStyleSheet(
+            """
+            QLineEdit {
+                border-radius: 5px;
+                padding: 5px;
+                border: 1px solid gray;
+            }
+        """
+        )
+        search_bar_layout.addWidget(
+            self.search_bar, alignment=Qt.AlignmentFlag.AlignCenter
+        )
 
-        settings_button = QPushButton("Settings")
-        top_bar_layout.addWidget(settings_button)
+        self.search_options = QFrame()
+        self.search_options.setStyleSheet(
+            "background-color: white; border: 1px solid gray;"
+        )
+        self.search_options.setFixedHeight(0)
+        search_bar_layout.addWidget(self.search_options)
 
-        # Contenido principal
-        content_layout = QHBoxLayout()
-        main_layout.addLayout(content_layout)
+        self.search_bar.mousePressEvent = self.expand_search
 
-        # Barra lateral
-        side_bar = QListWidget()
-        side_bar.addItem(QListWidgetItem("Item 1"))
-        side_bar.addItem(QListWidgetItem("Item 2"))
-        side_bar.addItem(QListWidgetItem("Item 3"))
-        side_bar.addItem(QListWidgetItem("Item 4"))
-        content_layout.addWidget(side_bar)
+    def expand_search(self, event):
+        self.animation = QPropertyAnimation(self.search_options, b"geometry")
+        self.animation.setDuration(300)
+        self.animation.setStartValue(
+            QRect(
+                self.search_options.x(),
+                self.search_options.y(),
+                self.search_options.width(),
+                0,
+            )
+        )
+        self.animation.setEndValue(
+            QRect(
+                self.search_options.x(),
+                self.search_options.y(),
+                self.search_options.width(),
+                100,
+            )
+        )
+        self.animation.start()
 
-        # Lista principal
-        main_list = QListWidget()
-        main_list.addItem(QListWidgetItem("Element 1"))
-        main_list.addItem(QListWidgetItem("Element 2"))
-        main_list.addItem(QListWidgetItem("Element 3"))
-        main_list.addItem(QListWidgetItem("Element 4"))
-        content_layout.addWidget(main_list)
+
+class ChangeHandler(FileSystemEventHandler):
+    def __init__(self, app):
+        self.app = app
+
+    def on_modified(self, event):
+        if event.src_path.endswith(".py"):
+            print("File changed, reloading...")
+            self.app.quit()
+            os.execv(sys.executable, ["python"] + sys.argv)
 
 
 if __name__ == "__main__":
+    print("Starting application...")
     app = QApplication(sys.argv)
     window = SimpleUI()
     window.show()
-    sys.exit(app.exec())
+
+    event_handler = ChangeHandler(app)
+    observer = Observer()
+    observer.schedule(event_handler, path=".", recursive=True)
+    observer.start()
+
+    try:
+        sys.exit(app.exec())
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
+    print("Application reloaded successfully!")
