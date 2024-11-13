@@ -201,8 +201,6 @@ def get_random_anime(loader: JsonLibrary) -> str:
     """
     anime_list = loader.get_anime()
     if not anime_list:
-        return "No anime available."
+        return None
 
-    random_anime = random.choice(anime_list)
-
-    return random_anime.format_anime()
+    return random.choice(anime_list)
